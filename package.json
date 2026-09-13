@@ -1,0 +1,26 @@
+{
+  "name": "fluenta",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c green,cyan \"npm:server\" \"npm:client\"",
+    "server": "node server/index.js",
+    "client": "vite",
+    "build": "vite build",
+    "start": "node server/index.js",
+    "seed:demo": "node server/seed.js"
+  },
+  "description": "Fluenta — app de aprendizado de ingles por conversacao com IA (MVP full-stack)",
+  "dependencies": {
+    "better-sqlite3": "^12.11.1",
+    "express": "^5.2.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.1",
+    "concurrently": "^9.2.4",
+    "vite": "^8.3.0"
+  },
+  "private": true,
+  "type": "module"
+}

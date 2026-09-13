@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log*
+data
+.env
+.git
+.gitignore
+dist
+.vite
+uploads
+static-site
+*.png
+*.jpg
+*.jpeg
+README*.md

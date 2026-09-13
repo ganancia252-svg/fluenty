@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fluenta — demonstração offline</title>
+<style>
+  :root{
+    --bg:#fbfbfc;--surface:#fff;--surface-2:#f4f5f7;--ink:#12141a;--ink-2:#3d4351;--muted:#767d8c;
+    --line:#e7e9ee;--line-strong:#d5d9e2;--accent:#1c8f6a;--accent-soft:#e6f6f0;--warn:#b4571c;--warn-soft:#fdf1e7;
+    --radius:16px;--shadow:0 1px 2px rgba(18,20,26,.04),0 8px 24px -12px rgba(18,20,26,.14);
+    --font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased}
+  button{font:inherit;cursor:pointer;color:inherit}
+  h1,h2,h3{margin:0;letter-spacing:-.025em;line-height:1.25}
+  h1{font-size:26px;font-weight:680}h2{font-size:20px;font-weight:640}h3{font-size:16px;font-weight:620}
+  p{margin:0}
+  .small{font-size:13.5px}.tiny{font-size:12px}.muted{color:var(--muted)}.mono{font-variant-numeric:tabular-nums}
+  .row{display:flex;align-items:center;gap:10px}.row.wrap{flex-wrap:wrap}.between{justify-content:space-between}
+  .col{display:flex;flex-direction:column;gap:10px}
+  .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 18px;background:rgba(251,251,252,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:650;letter-spacing:-.02em}
+  .logo{width:28px;height:28px;border-radius:8px;background:var(--ink);color:#94f2c8;display:grid;place-items:center;font-weight:700;font-size:15px}
+  .nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  .nav button{border:0;background:transparent;color:var(--ink-2);padding:8px 12px;border-radius:999px;font-size:14px;font-weight:500}
+  .nav button:hover{background:var(--surface-2)}
+  .nav button[aria-current="true"]{background:var(--ink);color:#fff}
+  .chip{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;background:var(--surface);border:1px solid var(--line);padding:5px 10px;border-radius:999px;font-size:13px;font-weight:550;color:var(--ink-2)}
+  .chip.accent{background:var(--accent-soft);border-color:#cdeade;color:#10674c}
+  .chip.flat{background:transparent}
+  .main{max-width:1080px;margin:0 auto;padding:22px 18px 60px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+  .card.tight{padding:14px}
+  .stack>*+*{margin-top:14px}
+  .grid{display:grid;gap:16px}
+  @media(min-width:900px){.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{grid-template-columns:1.3fr 1fr}.talk{grid-template-columns:1fr 300px}}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line-strong);background:var(--surface);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600}
+  .btn:hover{background:var(--surface-2)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+  .btn.accent{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--ink-2)}
+  .btn.sm{padding:6px 11px;font-size:13px;border-radius:10px}
+  .btn.block{width:100%}
+  .input,.textarea{width:100%;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;padding:11px 13px;outline:none}
+  .textarea{resize:vertical;min-height:46px}
+  .lesson{display:flex;gap:14px;align-items:flex-start;text-align:left;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:10px}
+  .lesson:hover{border-color:var(--line-strong)}
+  .lesson .badge{flex:none;width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--surface-2);border:1px solid var(--line);font-size:12.5px;font-weight:650;color:var(--ink-2)}
+  .lesson .t{font-weight:620}.lesson .s{font-size:13px;color:var(--muted)}
+  .chat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:58vh;max-height:70vh}
+  .chat-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .chat-body{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:14px}
+  .chat-foot{padding:12px 14px;border-top:1px solid var(--line);background:var(--surface-2);border-radius:0 0 var(--radius) var(--radius)}
+  .msg{display:flex;gap:10px;max-width:94%}
+  .msg.me{margin-left:auto;flex-direction:row-reverse}
+  .avatar{flex:none;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--ink);color:#94f2c8;font-size:12px;font-weight:700}
+  .msg.me .avatar{background:var(--accent);color:#fff}
+  .bubble-text{background:var(--surface-2);border:1px solid var(--line);padding:11px 14px;border-radius:14px;font-size:15px}
+  .msg.me .bubble-text{background:var(--ink);border-color:var(--ink);color:#fff}
+  .card-fix{margin-top:8px;border:1px solid #f3dccb;background:var(--warn-soft);border-radius:12px;padding:10px 12px;font-size:13.5px}
+  .card-fix .strike{text-decoration:line-through;color:#9a6a45}
+  .card-fix .ok{font-weight:620;color:#7d3c0f}
+  .card-fix .why{color:#8a4315;margin-top:4px;font-size:13px}
+  .vocab-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .vocab-chip{display:inline-flex;align-items:center;gap:7px;background:var(--accent-soft);color:#0f5c45;border:1px solid #cdeade;border-radius:999px;padding:4px 10px;font-size:12.5px;font-weight:550}
+  .vocab-chip button{border:0;background:transparent;color:inherit;font-weight:700;padding:0 2px}
+  .mic{flex:none;width:48px;height:48px;border-radius:14px;border:1px solid var(--line-strong);background:var(--surface);display:grid;place-items:center;font-size:19px}
+  .mic.live{background:#c0392b;border-color:#c0392b;color:#fff}
+  .bar{height:8px;background:var(--surface-2);border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+  .bar>span{display:block;height:100%;background:var(--accent)}
+  .flash{display:grid;place-items:center;text-align:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow);min-height:200px}
+  .flash .term{font-size:28px;font-weight:660;letter-spacing:-.03em}
+  .overlay{position:fixed;inset:0;background:rgba(18,20,26,.45);display:grid;place-items:center;padding:18px;z-index:60}
+  .modal{background:var(--surface);border-radius:20px;width:100%;max-width:520px;max-height:88vh;overflow:auto;padding:22px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line)}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .fade{animation:f .25s ease}@keyframes f{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .hide{display:none!important}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><span class="logo">F</span> Fluenta <span class="chip flat tiny">demonstração offline</span></div>
+  <nav class="nav" id="nav"></nav>
+  <div class="row" style="gap:8px"><span class="chip" id="chipStreak">🔥 0</span><span class="chip accent mono" id="chipXp">0 XP</span></div>
+</div>
+<div id="view" class="main"></div>
+<div id="modals"></div>
+
+<script>
+/* ============================== dados ================================== */
+const LESSONS = [
+  { id:'a1-hello', level:'A1', unit:'Unit 1 · First contacts', title:'Say hello and introduce yourself',
+    scenario:'Conhecendo um colega novo na escola de idiomas', focus:'verb to be, subject pronouns',
+    objectives:['Apresentar-se com nome, idade e cidade','Perguntar o nome da outra pessoa','Usar contrações (I’m, you’re)'],
+    phrases:[['Hi, I’m Ana. Nice to meet you!','Oi, sou a Ana. Prazer em conhecer você!'],['Where are you from?','De onde você é?'],['I’m from Brazil, from São Paulo.','Sou do Brasil, de São Paulo.'],['How old are you? I’m 28.','Quantos anos você tem? Tenho 28.']],
+    opener:'Hi! I’m Alex, your English tutor. We’re at a language school and I just sat next to you. Hi! What’s your name?' },
+  { id:'a1-routine', level:'A1', unit:'Unit 2 · Routine', title:'Tell the time and describe your routine',
+    scenario:'Comparando rotinas com um colega de trabalho', focus:'present simple, adverbs of frequency',
+    objectives:['Falar horários e hábitos','Usar always/usually/never','Perguntar sobre a rotina do outro'],
+    phrases:[['I usually wake up at 6:30.','Eu geralmente acordo às 6h30.'],['What time do you have lunch?','A que horas você almoça?'],['I never work out in the morning.','Eu nunca treino de manhã.'],['After work, I go straight home.','Depois do trabalho, vou direto pra casa.']],
+    opener:'Morning! You look tired — rough start today? Tell me, what time did you wake up?' },
+  { id:'a2-cafe', level:'A2', unit:'Unit 4 · Social life', title:'Order food and drinks at a café',
+    scenario:'Pedindo café da manhã num café cheio', focus:'would like, countable/uncountable',
+    objectives:['Fazer pedidos com would like','Perguntar sobre o menu','Resolver um pedido errado'],
+    phrases:[['I’d like a flat white and a croissant, please.','Eu queria um flat white e um croissant, por favor.'],['Does it come with milk alternatives?','Vem com opções de leite vegetal?'],['Sorry, I ordered tea, not coffee.','Desculpe, pedi chá, não café.'],['Could we get the bill, please?','Poderia trazer a conta, por favor?']],
+    opener:'Good morning! Welcome to our café. What can I get for you today?' },
+  { id:'a2-weekend', level:'A2', unit:'Unit 4 · Social life', title:'Small talk about your weekend',
+    scenario:'Conversa de segunda-feira na copa do escritório', focus:'past simple, time expressions',
+    objectives:['Contar o que fez no fim de semana','Fazer perguntas no passado','Reagir com naturalidade'],
+    phrases:[['I went hiking with my cousins.','Fui fazer trilha com meus primos.'],['Did you do anything fun?','Você fez algo legal?'],['We stayed home and watched a series.','Ficamos em casa vendo uma série.'],['That sounds like a great Sunday.','Parece ter sido um ótimo domingo.']],
+    opener:'Morning! How was your weekend? Did you do anything interesting?' },
+  { id:'a2-interview', level:'A2', unit:'Unit 5 · Work', title:'A simple job interview',
+    scenario:'Primeira entrevista para um estágio', focus:'tell me about yourself, why + because',
+    objectives:['Responder "tell me about yourself"','Falar de forças e fraquezas','Fazer perguntas ao recrutador'],
+    phrases:[['I’m a fast learner and I enjoy teamwork.','Aprendo rápido e gosto de trabalhar em equipe.'],['Could you tell me more about the role?','Você poderia me contar mais sobre a vaga?'],['My biggest challenge was public speaking.','Meu maior desafio foi falar em público.'],['I’m available to start next month.','Tenho disponibilidade pra começar mês que vem.']],
+    opener:'Thanks for coming in today. Let’s start easy: tell me a little about yourself.' },
+  { id:'b1-opinions', level:'B1', unit:'Unit 7 · Opinion', title:'Give opinions and agree or disagree',
+    scenario:'Discussão sobre trabalho remoto com um colega', focus:'I reckon/in my view, agreeing politely',
+    objectives:['Dar opinião com justificativa','Concordar e discordar com educação','Pedir a opinião do outro'],
+    phrases:[['I reckon remote work suits some roles better.','Acho que o trabalho remoto combina mais com certas funções.'],['I see your point, but…','Entendo seu ponto, mas…'],['That’s a fair point.','É um argumento justo.'],['Where do you stand on this?','Qual é a sua posição sobre isso?']],
+    opener:'Our company is debating a full return to the office. Personally, I have mixed feelings. What’s your take on it?' },
+  { id:'b1-negotiate', level:'B1', unit:'Unit 8 · Meetings', title:'Negotiate deadlines and priorities',
+    scenario:'Um stakeholder quer a entrega mais cedo', focus:'conditionals, trade-offs',
+    objectives:['Negociar prazos','Oferecer alternativas','Dizer não com clareza'],
+    phrases:[['If we bring the date forward, we’ll drop testing.','Se anteciparmos, vamos cortar testes.'],['What if we deliver in two phases?','E se entregarmos em duas fases?'],['I can commit to Friday, but not Wednesday.','Consigo garantir sexta, mas não quarta.'],['That works if we keep the scope frozen.','Isso funciona se mantivermos o escopo congelado.']],
+    opener:'Look, leadership wants this live two weeks earlier. I know it’s tight. What can you realistically commit to?' },
+  { id:'b2-debate', level:'B2', unit:'Unit 10 · Fluency', title:'Debate a controversial topic',
+    scenario:'Debate estruturado sobre semana de 4 dias', focus:'concession, rebuttal, rhetorical devices',
+    objectives:['Sustentar uma posição por vários turnos','Rebater com evidência','Conceder e redirecionar'],
+    phrases:[['While I accept the productivity data, it’s cherry-picked.','Aceito os dados de produtividade, mas são escolhidos a dedo.'],['That argument collapses if demand is seasonal.','Esse argumento cai se a demanda for sazonal.'],['Let’s separate the principle from the execution.','Vamos separar o princípio da execução.'],['On balance, I’d still argue…','No geral, eu ainda defenderia…']],
+    opener:'Tonight’s motion: a four-day week should be mandatory. I’ll take the opposition side. Give me your strongest opening argument.' }
+]
+const GENERIC_VOCAB = [
+  ['That’s a good question, let me think.','Boa pergunta, deixa eu pensar.'],
+  ['It depends on the situation.','Depende da situação.'],
+  ['I’ve been meaning to try that.','Tenho querido experimentar isso.'],
+  ['To be honest, I’m not sure yet.','Sinceramente, ainda não tenho certeza.'],
+  ['That’s a fair point.','É um argumento justo.'],
+  ['Let me put it another way.','Deixa eu dizer de outro jeito.']
+]
+const FREE_TOPICS = ['Your perfect weekend in your city','A decision that changed your career','Technology you would ban tomorrow','The best advice you ever received','Your most embarrassing English mistake']
+
+/* ============================ motor do tutor =========================== */
+const RULES = [
+  [/\bi have (\d+|twenty|thirty|forty|fifty|\w+) years?\b/i,(m)=>`I am ${m[1]} years old`,'Em inglês não se usa "have" para idade — use "I am ... years old".'],
+  [/\bi am agree\b/i,()=>'I agree','"Agree" já é verbo: "I agree", sem "am".'],
+  [/\bmore better\b/i,()=>'better','"Better" já é comparativo: não use "more".'],
+  [/\bexplain me\b/i,()=>'explain to me','Usa-se "explain to me" / "explain something to me".'],
+  [/\bmake a question\b/i,()=>'ask a question','Fazemos "ask a question", não "make a question".'],
+  [/\bi'?m boring\b/i,()=>"I'm bored",'"Boring" = chato; "bored" = entediado.'],
+  [/\b(he|she|it) don't\b/i,(m)=>`${m[1]} doesn't`,'Terceira pessoa do singular usa "doesn\'t".'],
+  [/\bdidn'?t went\b/i,()=>"didn't go",'Depois de "didn\'t" o verbo fica na base: "didn\'t go".'],
+  [/\bpeople is\b/i,()=>'people are','"People" é plural: "people are".'],
+  [/\bpeoples\b/i,()=>'people','"People" já é plural — sem "s".'],
+  [/\bdepend of\b/i,()=>'depend on','A preposição correta é "depend on".'],
+  [/\bmarried with\b/i,()=>'married to','Usa-se "married to someone".'],
+  [/\bgood in (english|math|sports|it)\b/i,(m)=>`good at ${m[1]}`,'Com habilidades usamos "good at".'],
+  [/\bfor to\b/i,()=>'to','"For to" não existe: use só "to".'],
+  [/\bwork like\b/i,()=>'work as','Profissão usa "work as a designer", não "work like".'],
+  [/\bin the (weekend|morning|afternoon|evening)\b/i,(m)=>`on the ${m[1]}`,'Usa-se "on the weekend" (e "in the morning").'],
+  [/\bi born in\b/i,()=>'I was born in','"Nascer" pede passiva: "I was born in...".'],
+  [/\bsince (\d+|two|three|four|five) years\b/i,(m)=>`for ${m[1]} years`,'Duração usa "for"; "since" pede um ponto no tempo.'],
+  [/\bmore easy\b/i,()=>'easier','Adjetivos curtos formam o comparativo com -er.'],
+  [/\bif i would\b/i,()=>'if I had / if I were','No condicional, "if" não leva "would".'],
+  [/\bthe most big\b/i,()=>'the biggest','Adjetivos curtos formam superlativo com -est.'],
+  [/\bi go .* yesterday\b/i,(m)=>m[0].replace(/\bgo\b/i,'went'),'Ontem pede passado: "went", não "go".']
+]
+const PAST_MARKERS = /\b(yesterday|last night|last week|last month|last year|\d+ (days?|weeks?|months?|years?) ago|in 20\d\d)\b/i
+const PAST_FORMS = [
+  [/\bwe have\b/i,'we had'],[/\bi have\b/i,'I had'],[/\bthey have\b/i,'they had'],
+  [/\bit is\b/i,'it was'],[/\b(they|we|you) are\b/i,(m)=>`${m[1]} were`],[/\b(he|she|it) is\b/i,(m)=>`${m[1]} was`],
+  [/\b(go|goes)\b/i,'went'],[/\beat\b/i,'ate'],[/\bsee\b/i,'saw'],[/\bmake\b/i,'made'],[/\btake\b/i,'took'],
+  [/\bget\b/i,'got'],[/\bcome\b/i,'came'],[/\bdo\b/i,'did'],[/\bdrink\b/i,'drank'],[/\bsleep\b/i,'slept'],[/\bbuy\b/i,'bought']
+]
+const FOLLOW_UPS = {
+  A1:['Nice! And what about your best friend — what’s his or her name?','Good. Can you tell me one more thing? Where do you usually go on weekends?','Great answer! Now try a full sentence: what time do you usually wake up?','Perfect. And your family — do you live with them?'],
+  A2:['Interesting! What did you do after that?','Nice. And how often do you do that?','Good — can you say that again with a bit more detail?','That’s clear. What would you change about it next time?'],
+  B1:['That makes sense. What was the hardest part of it?','Good point. Can you give me an example to support that?','Fair. How would your answer change if money weren’t a problem?','Interesting — how does that compare with your previous experience?'],
+  B2:['Strong point. What’s the strongest counter-argument to that?','I follow you. Could you qualify that — what are the limits of your claim?','Interesting take. How would you defend that under pressure from a sceptic?','Good. What evidence would change your mind?']
+}
+function fixPast(s){
+  let out=s, changed=false
+  for(const [re,rep] of PAST_FORMS){ if(re.test(out)){ const b=out; out=out.replace(re,rep); if(b!==out) changed=true } }
+  return changed?out:null
+}
+function tutorTurn(text, lesson, turnIndex){
+  const correction={has_error:false,corrected:'',explanation:''}
+  let out=text
+  const whys=[]
+  for(const [re,fix,why] of RULES){
+    if(whys.length>=2) break
+    const m=out.match(re)
+    if(m){ const next=out.replace(re,fix(m)); if(next!==out){ out=next; whys.push(why) } }
+  }
+  if(!whys.length && PAST_MARKERS.test(text)){
+    const f=fixPast(text)
+    if(f){ out=f; whys.push('Você está falando do passado — os verbos precisam ir para o passado.') }
+  }
+  if(!whys.length && text.length>3 && /^[a-z]/.test(text)){
+    out=text; whys.push('Em inglês, comece a frase com letra maiúscula.')
+  }
+  if(whys.length){
+    correction.has_error=true
+    correction.corrected=out.replace(/^[a-z]/,c=>c.toUpperCase())
+    correction.explanation=whys.join(' ')
+  }
+  const words=text.split(/\s+/).filter(Boolean).length
+  const ack = words<=2?'Short but clear!':words<=8?'Good, that works.':'Nice, you’re building longer sentences.'
+  const praise = correction.has_error?`Small fix first: “${correction.corrected}”.`:ack
+  const level=lesson?.level||'A2'
+  const bank=FOLLOW_UPS[level]||FOLLOW_UPS.A2
+  const seed=(text.length+(lesson?.id?.length||0)+turnIndex)%bank.length
+  const pool = lesson?.phrases?.length ? lesson.phrases : GENERIC_VOCAB
+  const pick = pool[seed%pool.length]
+  const vocab = words<=10 ? [{term:pick[0],meaning:pick[1]}] : []
+  return { reply:`${praise} ${bank[seed]}`, correction, vocab,
+           hint: lesson?.objectives?.length?`Tente usar: ${lesson.objectives[seed%lesson.objectives.length]}`:'',
+           xp: 10+(correction.has_error?0:5)+vocab.length*2 }
+}
+
+/* ============================== estado ================================= */
+const state = {
+  tab:'home', name:'', level:'A2',
+  chat:null,            // { lesson, messages:[{role,content,payload,forUser}], turn }
+  vocab:[],             // {term, meaning, box, correct}
+  saved:{},
+  history:[],           // {title, level, turns, xp, score, at}
+  xp:0, streak:1, todayTurns:0, report:null, review:{i:0,revealed:false,ok:0,no:0}
+}
+function save(txt){ const t=String(txt||'').trim(); if(!t) return; if(state.vocab.some(v=>v.term.toLowerCase()===t.toLowerCase())) return
+  state.vocab.unshift({term:t,meaning:'',box:0,correct:0}) }
+
+/* =============================== views ================================= */
+const $=id=>document.getElementById(id)
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))
+const NAV=[['home','Início'],['review','Vocabulário · '+0],['progress','Progresso']]
+
+function renderNav(){
+  $('nav').innerHTML = NAV.map(([id,label])=>{
+    const txt = id==='review' ? `Vocabulário${state.vocab.length?' · '+state.vocab.length:''}` : label
+    return `<button data-tab="${id}" aria-current="${state.tab===id||(id==='home'&&state.tab==='chat')}">${txt}</button>`
+  }).join('')
+  $('chipXp').textContent = state.xp+' XP'
+  $('chipStreak').textContent = '🔥 '+state.streak
+}
+function viewHome(){
+  if(!state.name){
+    return `<div class="card stack" style="max-width:560px;margin:28px auto">
+      <h1>Aprenda inglês conversando</h1>
+      <p class="muted small">Esta é a versão <b>offline em arquivo único</b> do Fluenta: o tutor roda aqui mesmo, sem servidor.
+      A versão completa (com login, banco e IA real por chave de API) é a que está no outro link.</p>
+      <div class="col">
+        <label class="small muted">Seu nome</label>
+        <input class="input" id="nameInput" placeholder="Como quer ser chamado" value="Marina" />
+        <label class="small muted">Seu nível</label>
+        <select class="input" id="levelInput">
+          ${['A1','A2','B1','B2'].map(l=>`<option value="${l}"${l===state.level?' selected':''}>${l} · ${({A1:'Iniciante',A2:'Básico',B1:'Intermediário',B2:'Avançado'})[l]}</option>`).join('')}
+        </select>
+        <button class="btn primary block" id="startBtn">Começar a conversar</button>
+      </div>
+    </div>`
+  }
+  const doneToday = state.todayTurns
+  return `<div class="grid hero">
+    <section class="card stack">
+      <div>
+        <span class="tiny muted" style="letter-spacing:.06em;font-weight:650">OLÁ DE NOVO</span>
+        <h1>Good to see you, ${esc(state.name)}! Ready to talk?</h1>
+        <p class="muted small">Você já respondeu ${doneToday} vez(es) hoje e ganhou ${state.xp} XP nesta demonstração.
+        Fale em voz alta: a pronúncia treina junto.</p>
+      </div>
+      <div class="row wrap">
+        <span class="chip">🔥 ${state.streak} dia(s) em sequência</span>
+        <span class="chip">🎯 Nível ${state.level}</span>
+        ${state.vocab.length?`<button class="chip accent" data-tab="review">🔁 ${state.vocab.length} palavra(s) salvas</button>`:''}
+      </div>
+      <div class="row">
+        <button class="btn accent" data-lesson="${LESSONS[0].id}">▶︎ Começar a conversar</button>
+        <button class="btn" data-free="1">Conversa livre</button>
+      </div>
+    </section>
+    <aside class="col">
+      <div class="card">
+        <h3>Trilha rápida</h3>
+        <p class="small muted" style="margin-top:6px">8 lições de amostra entre A1 e B2. Na versão completa são 35, com progresso salvo
+        e teste de nivelamento.</p>
+      </div>
+      <div class="card">
+        <h3>Conversa livre</h3>
+        <p class="small muted" style="margin-top:6px">Tema sugerido: <b>${esc(FREE_TOPICS[0])}</b></p>
+        <button class="btn block" style="margin-top:10px" data-free="1">Falar sobre isso</button>
+      </div>
+    </aside>
+  </div>
+  <h2 style="margin:26px 0 12px">Lições de amostra</h2>
+  ${LESSONS.map(l=>`<button class="lesson" data-lesson="${l.id}">
+      <span class="badge">${l.level}</span>
+      <span style="flex:1">
+        <span class="t" style="display:block">${esc(l.title)}</span>
+        <span class="s" style="display:block">${esc(l.scenario)}</span>
+        <span class="chip flat tiny" style="margin-top:6px">foco: ${esc(l.focus)}</span>
+      </span>
+    </button>`).join('')}`
+}
+function viewChat(){
+  const c=state.chat
+  return `<div class="grid talk">
+    <section class="chat">
+      <header class="chat-head">
+        <button class="btn ghost sm" data-tab="home">← Sair</button>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:620">${esc(c.lesson?c.lesson.title:'Free talk')}</div>
+          <div class="tiny muted">${esc(c.lesson?c.lesson.scenario:'conversa livre')} · ${c.lesson?c.lesson.level:state.level}</div>
+        </div>
+        <button class="btn sm" id="endBtn">Encerrar</button>
+      </header>
+      <div class="chat-body" id="chatBody">
+        ${c.messages.map(renderMessage).join('')}
+      </div>
+      <footer class="chat-foot">
+        ${c.lastHint?`<div class="row" style="margin-bottom:8px"><span class="chip accent">💡 ${esc(c.lastHint)}</span></div>`:''}
+        <div class="row" style="align-items:flex-end">
+          <button class="mic${c.listening?' live':''}" id="micBtn" title="Falar (se o navegador permitir)">${c.listening?'⏹':'🎙'}</button>
+          <textarea class="textarea" id="msgInput" rows="1" placeholder="${c.listening?'Estou ouvindo…':'Escreva em inglês (ex.: I have 30 years)'}"></textarea>
+          <button class="btn primary" id="sendBtn">Enviar</button>
+        </div>
+      </footer>
+    </section>
+    <aside class="col">
+      <div class="card">
+        <div class="row between"><h3>Sessão</h3><span class="chip flat mono">${c.turn} resposta(s)</span></div>
+        <div class="grid cols-2" style="margin-top:12px">
+          <div><div class="tiny muted">XP nesta sessão</div><div class="mono" style="font-size:20px;font-weight:650">+${c.xp}</div></div>
+          <div><div class="tiny muted">Palavras salvas</div><div class="mono" style="font-size:20px;font-weight:650">${Object.keys(state.saved).length}</div></div>
+        </div>
+        <button class="btn block" style="margin-top:12px" id="endBtn2">Encerrar e ver relatório</button>
+      </div>
+      ${c.lesson?`<div class="card">
+        <h3>Objetivos da lição</h3>
+        <ul class="small" style="margin:10px 0 0;padding-left:18px">${c.lesson.objectives.map(o=>`<li>${esc(o)}</li>`).join('')}</ul>
+        <p class="tiny muted" style="margin-top:10px">Foco gramatical: ${esc(c.lesson.focus)}</p>
+      </div>
+      <div class="card">
+        <div class="row between"><h3>Frases-alvo</h3><span class="tiny muted">toque para ouvir</span></div>
+        <div class="col" style="margin-top:10px;gap:8px">
+          ${c.lesson.phrases.map(([en,pt])=>`<div class="row" style="align-items:flex-start;gap:8px">
+            <button class="btn ghost sm" data-speak="${esc(en)}">🔈</button>
+            <div style="flex:1"><div style="font-size:13.5px;font-weight:600">${esc(en)}</div><div class="tiny muted">${esc(pt)}</div></div>
+            <button class="chip flat" data-save="${esc(en)}|${esc(pt)}">${state.saved[en]?'✓':'+'}</button>
+          </div>`).join('')}
+        </div>
+      </div>`:''}
+    </aside>
+  </div>`
+}
+function renderMessage(m){
+  if(m.role==='user') return `<div class="msg me fade"><span class="avatar">EU</span><div class="bubble-text">${esc(m.content)}</div></div>`
+  const fix=m.payload?.correction, vocab=m.payload?.vocab||[]
+  return `<div class="msg fade"><span class="avatar">AI</span><div style="min-width:0">
+    <div class="bubble-text">${esc(m.content)}</div>
+    ${fix?.has_error&&m.forUser?`<div class="card-fix">
+      <div class="strike">${esc(m.forUser)}</div>
+      <div class="ok">✓ ${esc(fix.corrected)}</div>
+      <div class="why">${esc(fix.explanation)}</div>
+      <button class="btn sm" style="margin-top:8px" data-speak="${esc(fix.corrected)}">🔈 ouvir a versão correta</button>
+    </div>`:''}
+    ${vocab.length?`<div class="vocab-chips">${vocab.map(v=>`<span class="vocab-chip">
+        <button data-speak="${esc(v.term)}">🔈</button>${esc(v.term)}${v.meaning?' · '+esc(v.meaning):''}
+        <button data-save="${esc(v.term)}|${esc(v.meaning||'')}">${state.saved[v.term]?'✓':'＋'}</button>
+      </span>`).join('')}</div>`:''}
+    <div class="row" style="margin-top:6px"><button class="btn ghost sm" data-speak="${esc(m.content)}">🔈 ouvir</button></div>
+  </div></div>`
+}
+function viewReview(){
+  const items=state.vocab
+  if(!items.length) return `<div class="card" style="text-align:center;padding:36px">
+      <h3>Nenhuma palavra salva ainda</h3>
+      <p class="small muted" style="margin-top:6px">Durante a conversa, toque no <b>＋</b> das sugestões do tutor para guardar palavras aqui.</p>
+    </div>`
+  const r=state.review, cur=items[r.i%items.length]
+  return `<div class="grid cols-2" style="align-items:start">
+    <div class="col">
+      <div class="flash fade">
+        <div>
+          <div class="term">${esc(cur.term)}</div>
+          ${r.revealed&&cur.meaning?`<p style="margin-top:10px;font-size:17px">${esc(cur.meaning)}</p>`:''}
+          ${!r.revealed?'<p class="tiny muted" style="margin-top:8px">Você lembra o significado? Toque para revelar.</p>':'<p class="tiny muted" style="margin-top:8px">caixa '+(cur.box+1)+' de 6 · '+cur.correct+' acerto(s)</p>'}
+        </div>
+        <div class="row"><button class="btn sm" data-speak="${esc(cur.term)}">🔈 ouvir</button>
+          ${!r.revealed?'<button class="btn sm primary" id="revealBtn">Revelar</button>':''}</div>
+      </div>
+      ${r.revealed?`<div class="row"><button class="btn block" data-answer="no">😅 Não lembrei</button><button class="btn accent block" data-answer="yes">✅ Lembrei</button></div>`
+                  :`<button class="btn block" id="revealBtn2">Mostrar resposta</button>`}
+      <div class="card tight">
+        <div class="row between"><span class="tiny muted">Sessão</span><span class="tiny mono">${r.ok} acertos · ${r.no} erros</span></div>
+        <div class="bar" style="margin-top:8px"><span style="width:${Math.round(((r.i%items.length)+1)/items.length*100)}%"></span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row between"><h3>Suas palavras</h3><span class="tiny muted">${items.length} itens</span></div>
+      <table style="margin-top:10px"><thead><tr><th>Termo</th><th>Significado</th></tr></thead><tbody>
+        ${items.map(v=>`<tr><td><b>${esc(v.term)}</b></td><td class="small muted">${esc(v.meaning||'—')}</td></tr>`).join('')}
+      </tbody></table>
+      <p class="tiny muted" style="margin-top:12px">Na versão completa, cada acerto empurra a palavra para mais longe (1 → 2 → 4 → 8 → 16 → 32 dias).</p>
+    </div>
+  </div>`
+}
+function viewProgress(){
+  const totalTurns=state.history.reduce((a,h)=>a+h.turns,0)+state.todayTurns
+  return `<h1>Seu progresso</h1>
+  <p class="muted small">Nesta demonstração o histórico fica na memória da página. Na versão completa tudo é salvo no banco por usuário.</p>
+  <div class="grid cols-2" style="margin-top:16px">
+    <div class="card tight"><div class="tiny muted">XP</div><div class="mono" style="font-size:24px;font-weight:660">${state.xp}</div><div class="tiny muted">nível ${state.level}</div></div>
+    <div class="card tight"><div class="tiny muted">Sequência</div><div class="mono" style="font-size:24px;font-weight:660">${state.streak} d</div><div class="tiny muted">recorde ${state.streak}</div></div>
+    <div class="card tight"><div class="tiny muted">Conversas</div><div class="mono" style="font-size:24px;font-weight:660">${state.history.length+(state.chat?1:0)}</div><div class="tiny muted">${totalTurns} respostas suas</div></div>
+    <div class="card tight"><div class="tiny muted">Palavras</div><div class="mono" style="font-size:24px;font-weight:660">${state.vocab.length}</div><div class="tiny muted">para revisar</div></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3>Histórico de conversas</h3>
+    ${state.history.length?`<table style="margin-top:10px"><thead><tr><th>Conversa</th><th>Nível</th><th>Respostas</th><th>Nota</th><th>XP</th></tr></thead><tbody>
+      ${state.history.map(h=>`<tr><td><b>${esc(h.title)}</b></td><td class="mono">${h.level}</td><td class="mono">${h.turns}</td><td class="mono">${h.score}</td><td class="mono">${h.xp}</td></tr>`).join('')}
+    </tbody></table>`:'<p class="small muted" style="margin-top:8px">Nenhuma conversa concluída ainda. Encerre uma sessão para vê-la aqui.</p>'}
+  </div>`
+}
+function render(){
+  renderNav()
+  $('view').innerHTML = state.tab==='home'?viewHome():state.tab==='chat'?viewChat():state.tab==='review'?viewReview():viewProgress()
+  const body=$('chatBody'); if(body) body.scrollTop=body.scrollHeight
+  const inp=$('msgInput'); if(inp && !('ontouchstart' in window)) inp.focus()
+  renderModal()
+}
+function renderModal(){
+  const r=state.report
+  $('modals').innerHTML = r?`<div class="overlay" id="overlay"><div class="modal fade">
+    <div class="row between" style="margin-bottom:14px"><h2>Relatório da sessão</h2><button class="btn ghost sm" data-close="1">✕</button></div>
+    <div class="grid" style="grid-template-columns:repeat(3,1fr);gap:10px">
+      <div class="card tight"><div class="tiny muted">Nota</div><div class="mono" style="font-size:24px;font-weight:660">${r.score}</div></div>
+      <div class="card tight"><div class="tiny muted">Respostas</div><div class="mono" style="font-size:24px;font-weight:660">${r.turns}</div></div>
+      <div class="card tight"><div class="tiny muted">XP ganho</div><div class="mono" style="font-size:24px;font-weight:660">+${r.xp}</div></div>
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px">
+      <div class="card tight"><div class="tiny muted">Palavras faladas</div><div class="mono">${r.words}</div></div>
+      <div class="card tight"><div class="tiny muted">Correções</div><div class="mono">${r.corrections}</div></div>
+      <div class="card tight"><div class="tiny muted">Duração</div><div class="mono">~${r.min} min</div></div>
+    </div>
+    <p class="small muted" style="margin-top:14px">Sequência: <b>${state.streak} dia(s)</b> · XP total: <b>${state.xp}</b></p>
+    <div class="row" style="margin-top:18px"><button class="btn primary" data-close="1">Continuar praticando</button></div>
+  </div></div>`:''
+}
+
+/* =============================== ações ================================= */
+function startLesson(lessonId, free){
+  const lesson = free?null:LESSONS.find(l=>l.id===lessonId)||LESSONS[0]
+  const opener = lesson?lesson.opener:'Hi! I’m Alex, your English tutor. Let’s just talk — tell me, how has your week been so far?'
+  state.chat={ lesson, messages:[{role:'tutor',content:opener,payload:{correction:{has_error:false},vocab:[]}}], turn:0, xp:0, lastHint:'', listening:false }
+  state.tab='chat'
+  speak(opener)
+  render()
+}
+function sendMessage(){
+  const inp=$('msgInput'); if(!inp) return
+  const text=inp.value.trim(); if(!text) return
+  const c=state.chat
+  c.messages.push({role:'user',content:text})
+  inp.value=''
+  const res=tutorTurn(text,c.lesson,c.turn)
+  c.messages.push({role:'tutor',content:res.reply,payload:{correction:res.correction,vocab:res.vocab},forUser:text})
+  c.turn++; c.xp+=res.xp; c.lastHint=res.hint
+  state.xp+=res.xp; state.todayTurns++
+  render()
+  speak(res.reply)
+}
+function endSession(){
+  const c=state.chat
+  const userMsgs=c.messages.filter(m=>m.role==='user')
+  if(!userMsgs.length){ state.tab='home'; state.chat=null; render(); return }
+  const corrections=c.messages.filter(m=>m.payload?.correction?.has_error).length
+  const words=userMsgs.reduce((a,m)=>a+m.content.split(/\s+/).filter(Boolean).length,0)
+  const accuracy=1-corrections/Math.max(userMsgs.length*2,1)
+  const score=Math.max(45,Math.min(100,Math.round(45+accuracy*35+Math.min(userMsgs.length,12)/12*20)))
+  const xp=c.xp+Math.round(score/4)+15
+  state.xp+=Math.round(score/4)+15
+  state.history.unshift({title:c.lesson?c.lesson.title:'Free talk',level:c.lesson?c.lesson.level:state.level,turns:userMsgs.length,score,xp,at:new Date()})
+  state.report={score,turns:userMsgs.length,xp,words,corrections,min:Math.max(1,Math.round(userMsgs.length*20/60))}
+  state.chat=null; state.tab='progress'
+  render()
+}
+function speak(text){
+  try{
+    const s=window.speechSynthesis; if(!s||!text) return
+    s.cancel()
+    const u=new SpeechSynthesisUtterance(text.slice(0,400)); u.lang='en-US'; u.rate=.95
+    const v=(s.getVoices()||[]).find(x=>/^en/i.test(x.lang)); if(v) u.voice=v
+    s.speak(u)
+  }catch{}
+}
+function startMic(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition
+  if(!SR){ alert('Reconhecimento de fala não está disponível aqui. Digite a resposta — na versão completa o microfone funciona no Chrome/Edge.'); return }
+  const rec=new SR(); rec.lang='en-US'; rec.interimResults=true
+  const c=state.chat; c.listening=true; render()
+  rec.onresult=e=>{ const t=[...e.results].map(r=>r[0].transcript).join(' '); const i=$('msgInput'); if(i) i.value=t }
+  rec.onend=()=>{ c.listening=false; render(); if(($('msgInput')?.value||'').trim()) sendMessage() }
+  rec.onerror=()=>{ c.listening=false; render() }
+  try{ rec.start() }catch{}
+}
+
+/* ============================== eventos ================================ */
+document.addEventListener('click',(e)=>{
+  const el=e.target.closest('[data-tab],[data-lesson],[data-free],[data-speak],[data-save],[data-answer],[data-close],#startBtn,#sendBtn,#endBtn,#endBtn2,#micBtn,#revealBtn,#revealBtn2')
+  if(!el) return
+  if(el.dataset.tab){
+    if(state.tab==='chat'&&state.chat&&state.chat.turn>0) endSession()
+    state.tab=el.dataset.tab; render(); return
+  }
+  if(el.dataset.lesson){ startLesson(el.dataset.lesson); return }
+  if(el.dataset.free!==undefined){ startLesson(null,true); return }
+  if(el.dataset.speak){ speak(el.dataset.speak); return }
+  if(el.dataset.save){
+    const [term,meaning]=el.dataset.save.split('|')
+    save(term); const v=state.vocab.find(x=>x.term===term); if(v&&meaning&&!v.meaning) v.meaning=meaning
+    state.saved[term]='ok'; render(); return
+  }
+  if(el.dataset.answer){
+    const cur=state.vocab[state.review.i%state.vocab.length]
+    if(el.dataset.answer==='yes'){ cur.correct++; cur.box=Math.min(cur.box+1,5); state.review.ok++; state.xp+=4 }
+    else { cur.box=0; state.review.no++ }
+    state.review.i++; state.review.revealed=false; render(); return
+  }
+  if(el.dataset.close){ state.report=null; render(); return }
+  if(el.id==='startBtn'){
+    state.name=($('nameInput')||{}).value||'Aluno'; state.level=($('levelInput')||{}).value||'A2'
+    startLesson(LESSONS[0].id); return
+  }
+  if(el.id==='sendBtn'){ sendMessage(); return }
+  if(el.id==='endBtn'||el.id==='endBtn2'){ endSession(); return }
+  if(el.id==='micBtn'){ startMic(); return }
+  if(el.id==='revealBtn'||el.id==='revealBtn2'){ state.review.revealed=true; render(); return }
+})
+document.addEventListener('keydown',(e)=>{
+  if(e.target.id==='msgInput'&&e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMessage() }
+  if(e.ctrlKey&&e.code==='Space'&&state.tab==='chat'){ e.preventDefault(); startMic() }
+})
+if(window.speechSynthesis){ window.speechSynthesis.getVoices(); window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices() }
+render()
+</script>
+</body>
+</html>

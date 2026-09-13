@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: fluenta-pessoal
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: /data
+      - key: PORT
+        value: "10000"
+      - key: SERVER_SECRET
+        generateValue: true
+      # Opcional: deixe ausente para usar o tutor local de demonstração.
+      # - key: AI_PROVIDER
+      #   value: openai
+      # - key: AI_API_KEY
+      #   sync: false
+    disk:
+      name: fluenta-data
+      mountPath: /data
+      sizeGB: 1
